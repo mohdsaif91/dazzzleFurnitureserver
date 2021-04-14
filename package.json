@@ -4,10 +4,11 @@
   "description": " A basic starter for an express.js API",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "nodemon src/index.js",
     "dev": "nodemon src/index.js",
     "lint": "eslint --fix src",
-    "test": "mocha --exit"
+    "test": "mocha --exit",
+    "heroku-postbuild": "cd client && npm install && npm run build"
   },
   "keywords": [],
   "author": "CJ R. <cj@null.computer> (https://w3cj.now.sh)",
@@ -17,11 +18,15 @@
   },
   "license": "MIT",
   "dependencies": {
+    "aws-sdk": "^2.885.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "helmet": "^4.4.1",
-    "morgan": "^1.10.0"
+    "mongoose": "^5.12.3",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "eslint": "^7.18.0",
