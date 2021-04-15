@@ -3,23 +3,19 @@
   "version": "1.2.0",
   "description": " A basic starter for an express.js API",
   "main": "index.js",
-  "engines":{
-    "node":"14.16.0",
-    "npm":"6.14.11"
+  "engines": {
+    "node": "14.16.0",
+    "npm": "6.14.11"
   },
   "scripts": {
-    "start": "node src/index.js",
+    "start": "nodemon src/index.js",
     "dev": "nodemon src/index.js",
     "lint": "eslint --fix src",
     "test": "mocha --exit",
-    "heroku-postbuild":"cd client && npm install && npm run build"
+    "heroku-postbuild": "cd client && npm install && npm run build"
   },
   "keywords": [],
   "author": "CJ R. <cj@null.computer> (https://w3cj.now.sh)",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/w3cj/express-api-starter.git"
-  },
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.885.0",

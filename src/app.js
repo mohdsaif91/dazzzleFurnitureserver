@@ -3,7 +3,6 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const cors = require("cors");
 const path = require("path");
-// const mongoose = require("mongoose");
 
 require("dotenv").config();
 
@@ -21,8 +20,10 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/build/index.html"));
+app.get("/", (req, res) => {
+  res.json({
+    message: "🌎🌍🌏 Furnitures ",
+  });
 });
 
 app.use("/v1", api);

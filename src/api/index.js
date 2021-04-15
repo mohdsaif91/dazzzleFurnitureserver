@@ -6,6 +6,6 @@ const category = require("./category");
 const router = express.Router();
 
 router.use("/", login);
-router.use("/category",category);
+router.use("/category", category);
 
 module.exports = router;
