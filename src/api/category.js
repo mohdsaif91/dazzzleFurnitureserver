@@ -6,6 +6,7 @@ const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const multer = require("multer");
+const ObjectId = require("mongodb").ObjectID;
 
 const ACCESS_KEY = process.env.AWS_ACCESS_KEY_ID;
 const SECRET_KEY = process.env.AWS_SECRET_ACCESS_KEY;
@@ -22,6 +23,7 @@ const storage = multer.memoryStorage({
 });
 
 const upload = multer({ storage }).single("categoryImage");
+const editUpload = multer({ storage }).single("editedImage");
 
 router.post("/add", upload, async (req, res) => {
   let imageData = "";
@@ -36,7 +38,6 @@ router.post("/add", upload, async (req, res) => {
       Body: req.file.buffer,
       ACL: "public-read-write",
     };
-
     s3.upload(params, (err, data) => {
       if (err) {
         res.status(400).send(err);
@@ -61,6 +62,90 @@ router.post("/add", upload, async (req, res) => {
   }
 });
 
+//update Categorey
+router.patch("/updateCategory", editUpload, async (req, response) => {
+  try {
+    const { editedImage, imageName, categoryId, editedcategoryName } = req.body;
+    const updateImageFlage = false;
+    //with Image
+    if (!editedImage) {
+      let fileName = req.file.originalname.split(".");
+      const myFileType = fileName[fileName.length - 1];
+      const newImageName = `${uuidv4()}.${myFileType}`;
+      const removeKey = `categories/
+      ${imageName}`;
+      const addKey = `categories/${newImageName}`;
+      const params = {
+        Bucket: process.env.BUCKET,
+        Key: removeKey,
+        Body: req.file.buffer,
+        ACL: "public-read-write",
+      };
+      const updateParam = {
+        Bucket: process.env.BUCKET,
+        Key: addKey,
+        Body: req.file.buffer,
+        ACL: "public-read-write",
+      };
+
+      try {
+        s3.deleteObject(
+          { Bucket: process.env.BUCKET, Key: removeKey },
+          (err, res) => {
+            if (err) {
+              console.log("1 ", err);
+              throw err;
+
+              // response.status(500).send(err);
+            }
+            console.log(res, "----delete response <>?");
+            s3.upload(updateParam, async (err, data) => {
+              if (err) {
+                console.log("2 ", err);
+                throw err;
+              }
+              console.log(data, " imageUpload");
+              await categorySchema.updateOne(
+                { _id: new ObjectId(categoryId) },
+                {
+                  categoryName: editedcategoryName,
+                  imageName: newImageName,
+                },
+                (err, data) => {
+                  if (err) {
+                    console.log("3 ", err);
+                    throw err;
+                  }
+                  console.log(data, " data<>?");
+                  response.status(201).send(data);
+                }
+              );
+            });
+          }
+        );
+      } catch (error) {
+        console.log(error, " 4");
+        response.status(500).send(error);
+      }
+    } else {
+      //without Image
+      await categorySchema.findByIdAndUpdate(
+        `${categoryId}`,
+        { categoryName: editedcategoryName },
+        { new: true },
+        (err, res) => {
+          if (err) throw err;
+          console.log(res);
+          response.status(201).send({ res });
+        }
+      );
+    }
+  } catch (error) {
+    console.log(error);
+  }
+});
+
 router.get("/", categoryController.getCountCategory);
+router.delete("/delete/:id/:imageName", categoryController.deleteCategory);
 
 module.exports = router;
