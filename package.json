@@ -8,8 +8,8 @@
     "npm": "6.14.11"
   },
   "scripts": {
-    "start": "nodemon src/index.js",
-    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
     "lint": "eslint --fix src",
     "test": "mocha --exit"
   },
