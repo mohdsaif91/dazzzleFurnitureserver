@@ -72,8 +72,7 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
       let fileName = req.file.originalname.split(".");
       const myFileType = fileName[fileName.length - 1];
       const newImageName = `${uuidv4()}.${myFileType}`;
-      const removeKey = `categories/
-      ${imageName}`;
+      const removeKey = `categories/${imageName}`;
       const addKey = `categories/${newImageName}`;
       const params = {
         Bucket: process.env.BUCKET,
