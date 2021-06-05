@@ -27,8 +27,10 @@ const addProduct = async (req, res) => {
         Body: req.file.buffer,
         ACL: "public-read-write",
       };
-
-      const { productName, productCategory, productId } = req.body;
+      const allProductId = await productSchema.find({});
+      const productId = allProductId[allProductId.length - 1].productId + 1;
+      const { productName, productCategory } = req.body;
+      console.log(productName, productCategory, productId);
       const newProduct = await productSchema.create(
         {
           productId,
@@ -41,6 +43,7 @@ const addProduct = async (req, res) => {
           if (err) {
             throw err;
           }
+
           s3.upload(params, (err, data) => {
             if (err) {
               res.status(400).send(err);
@@ -57,7 +60,8 @@ const addProduct = async (req, res) => {
 
 const getProduct = async (req, res) => {
   try {
-    const product = await productSchema.find({});
+    const { category } = req.params;
+    const product = await productSchema.find({ categoryName: category });
     res.status(200).json(product);
   } catch (error) {
     res.status(500).json(error);
@@ -162,9 +166,19 @@ const updateProduct = (req, res) => {
   }
 };
 
+const getLatestProductId = async () => {
+  try {
+    const allProduct = await productSchema.find({});
+    res.status(200).send(allProduct[allProduct.length - 1]);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
 module.exports = {
   addProduct,
   getProduct,
   deleteProduct,
   updateProduct,
+  getLatestProductId,
 };

@@ -1,4 +1,5 @@
 const categorySchema = require("../models/category");
+const productSchema = require("../models/productModal");
 const ObjectId = require("mongodb").ObjectID;
 
 const AWS = require("aws-sdk");
@@ -13,8 +14,28 @@ const s3 = new AWS.S3({
 
 const getCountCategory = async (req, res) => {
   try {
+    // categoryName
     const category = await categorySchema.find({});
-    res.status(200).json({ category });
+    const allProduct = await productSchema.find({});
+    category.sort((a, b) => {
+      return a.categoryName.localeCompare(b.categoryName);
+    });
+    let categoryCount = [];
+
+    category.map((m) => {
+      const cat = {
+        name: "",
+        count: 0,
+      };
+      cat.name = m.categoryName;
+      allProduct.filter((f) => {
+        if (f.categoryName === m.categoryName) {
+          cat.count += 1;
+        }
+      });
+      categoryCount.push(cat);
+    });
+    res.status(200).json({ category, categoryCount });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });
@@ -23,21 +44,35 @@ const getCountCategory = async (req, res) => {
 
 const deleteCategory = async (req, res) => {
   try {
-    const { id, imageName } = req.params;
+    const { id, imageName, categoryName } = req.params;
+    const withSpace = categoryName.replace(/_/g, " ");
     s3.deleteObject(
       { Bucket: process.env.BUCKET, Key: `categories/${imageName}` },
       async (err, s3Res) => {
         if (err) throw err;
+        console.log("1");
         await categorySchema.deleteOne(
           { _id: new ObjectId(id) },
-          (err, result) => {
+          async (err, result) => {
+            if (err) {
+              console.log(err);
+              throw err;
+            }
+            console.log("2");
+          }
+        );
+        await productSchema.deleteMany(
+          { categoryName: withSpace },
+          (err, data) => {
             if (err) throw err;
+            console.log("3");
             res.status(200).json({ id, imageName });
           }
         );
       }
     );
   } catch (error) {
+    console.log(error);
     res.status(204).json({ error });
   }
 };

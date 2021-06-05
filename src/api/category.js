@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const multer = require("multer");
 const ObjectId = require("mongodb").ObjectID;
+const productSchema = require("../models/productModal");
 
 const ACCESS_KEY = process.env.AWS_ACCESS_KEY_ID;
 const SECRET_KEY = process.env.AWS_SECRET_ACCESS_KEY;
@@ -65,7 +66,14 @@ router.post("/add", upload, async (req, res) => {
 //update Categorey
 router.patch("/updateCategory", editUpload, async (req, response) => {
   try {
-    const { editedImage, imageName, categoryId, editedcategoryName } = req.body;
+    const {
+      editedImage,
+      oldCategoryName,
+      imageName,
+      categoryId,
+      editedcategoryName,
+    } = req.body;
+    let updatedData = {};
     const updateImageFlage = false;
     //with Image
     if (!editedImage) {
@@ -94,8 +102,6 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
             if (err) {
               console.log("1 ", err);
               throw err;
-
-              // response.status(500).send(err);
             }
             console.log(res, "----delete response <>?");
             s3.upload(updateParam, async (err, data) => {
@@ -115,8 +121,23 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
                     console.log("3 ", err);
                     throw err;
                   }
+                  updatedData = data;
                   console.log(data, " data<>?");
-                  response.status(201).send(data);
+                  // response.status(201).send(data);
+                }
+              );
+              const myQuery = { categoryName: oldCategoryName };
+              const newValue = { $set: { categoryName: editedcategoryName } };
+              await productSchema.updateMany(
+                { categoryName: oldCategoryName },
+                { $set: { categoryName: editedcategoryName } },
+                (err, data) => {
+                  if (err) {
+                    console.log("3 ", err);
+                    throw err;
+                  }
+                  console.log(data);
+                  response.status(201).send(updatedData);
                 }
               );
             });
@@ -134,8 +155,23 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
         { new: true },
         (err, res) => {
           if (err) throw err;
-          console.log(res);
-          response.status(201).send({ res });
+          // console.log(res);
+          // response.status(201).send({ res });
+        }
+      );
+      // const myQuery = { categoryName: oldCategoryName };
+      // const newValue = { $set: { categoryName: editedcategoryName } };
+      console.log(oldCategoryName, editedcategoryName);
+      await productSchema.updateMany(
+        { categoryName: oldCategoryName },
+        { $set: { categoryName: editedcategoryName } },
+        (err, data) => {
+          if (err) {
+            console.log("3 ", err);
+            throw err;
+          }
+          console.log(data);
+          response.status(201).send(updatedData);
         }
       );
     }
@@ -145,6 +181,9 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
 });
 
 router.get("/", categoryController.getCountCategory);
-router.delete("/delete/:id/:imageName", categoryController.deleteCategory);
+router.delete(
+  "/delete/:id/:imageName/:categoryName",
+  categoryController.deleteCategory
+);
 
 module.exports = router;
