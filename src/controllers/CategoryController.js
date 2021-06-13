@@ -35,7 +35,9 @@ const getCountCategory = async (req, res) => {
       });
       categoryCount.push(cat);
     });
-    res.status(200).json({ category, categoryCount });
+    res
+      .status(200)
+      .json({ category, categoryCount, productCount: allProduct.length });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });

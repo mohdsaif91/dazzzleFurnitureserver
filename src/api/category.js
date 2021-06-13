@@ -110,12 +110,13 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
                 throw err;
               }
               console.log(data, " imageUpload");
-              await categorySchema.updateOne(
+              await categorySchema.findOneAndUpdate(
                 { _id: new ObjectId(categoryId) },
                 {
                   categoryName: editedcategoryName,
                   imageName: newImageName,
                 },
+                { returnOriginal: false },
                 (err, data) => {
                   if (err) {
                     console.log("3 ", err);
@@ -136,7 +137,7 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
                     console.log("3 ", err);
                     throw err;
                   }
-                  console.log(data);
+                  // console.log(data);
                   response.status(201).send(updatedData);
                 }
               );
@@ -153,15 +154,13 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
         `${categoryId}`,
         { categoryName: editedcategoryName },
         { new: true },
-        (err, res) => {
+        (err, data) => {
           if (err) throw err;
-          // console.log(res);
-          // response.status(201).send({ res });
+          updatedData = data;
+          console.log(data, "<>?");
         }
       );
-      // const myQuery = { categoryName: oldCategoryName };
-      // const newValue = { $set: { categoryName: editedcategoryName } };
-      console.log(oldCategoryName, editedcategoryName);
+
       await productSchema.updateMany(
         { categoryName: oldCategoryName },
         { $set: { categoryName: editedcategoryName } },
@@ -170,13 +169,13 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
             console.log("3 ", err);
             throw err;
           }
-          console.log(data);
           response.status(201).send(updatedData);
         }
       );
     }
   } catch (error) {
     console.log(error);
+    response.status(500).send(error);
   }
 });
 
