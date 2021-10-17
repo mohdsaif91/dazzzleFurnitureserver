@@ -60,6 +60,7 @@ const addProduct = async (req, res) => {
 
 const getProduct = async (req, res) => {
   try {
+    console.log("get Product----------------------------");
     const { category } = req.params;
     const product = await productSchema.find({ categoryName: category });
     res.status(200).json(product);
@@ -166,13 +167,28 @@ const updateProduct = (req, res) => {
   }
 };
 
-const getLatestProductId = async () => {
+const getLatestProductId = async (req, res) => {
   try {
+    console.log("kya --------------------");
     const allProduct = await productSchema.find({});
     res.status(200).send(allProduct[allProduct.length - 1]);
   } catch (error) {
     res.status(500).send(error);
   }
+};
+
+const getRandomProduct = async (req, res) => {
+  console.log("called");
+  return res.status(200).send("hi");
+  // try {
+  //   const randomProduct = await productSchema.find();
+  //   //   { $sample: { size: 1 } },
+  //   // ]);
+
+  //   // console.log(randomProduct);
+  // } catch (error) {
+  //   console.log(error);
+  // }
 };
 
 module.exports = {
@@ -181,4 +197,5 @@ module.exports = {
   deleteProduct,
   updateProduct,
   getLatestProductId,
+  getRandomProduct,
 };

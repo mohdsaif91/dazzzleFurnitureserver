@@ -13,6 +13,7 @@ app.listen(port, () => {
     })
     .then(() => {
       console.log("connected", port);
+      console.log("hihi---------------");
     })
     .catch((err) => console.log(err));
   /* eslint-enable no-console */
