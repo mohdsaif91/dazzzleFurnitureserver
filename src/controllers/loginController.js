@@ -23,4 +23,16 @@ const authLogin = async (req, res) => {
   }
 };
 
-module.exports = { authLogin };
+const createlogin = async (req, res) => {
+  try {
+    const created = await loginSchema.insertMany(req.body);
+    if (!created) {
+      throw "Could not create the data";
+    }
+    res.status(201).send("User Created !");
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+module.exports = { authLogin, createlogin };
