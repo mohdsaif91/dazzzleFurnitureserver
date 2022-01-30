@@ -32,13 +32,14 @@ router.post("/add", upload, async (req, res) => {
     let fileName = req.file.originalname.split(".");
     const myFileType = fileName[fileName.length - 1];
     const imageName = `${uuidv4()}.${myFileType}`;
-    const Key = `categories/${imageName}`;
+    const Key = `category/${imageName}`;
     const params = {
       Bucket: process.env.BUCKET,
       Key,
       Body: req.file.buffer,
       ACL: "public-read-write",
     };
+    console.log(params);
     s3.upload(params, (err, data) => {
       if (err) {
         res.status(400).send(err);
@@ -80,8 +81,8 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
       let fileName = req.file.originalname.split(".");
       const myFileType = fileName[fileName.length - 1];
       const newImageName = `${uuidv4()}.${myFileType}`;
-      const removeKey = `categories/${imageName}`;
-      const addKey = `categories/${newImageName}`;
+      const removeKey = `category/${imageName}`;
+      const addKey = `category/${newImageName}`;
       const params = {
         Bucket: process.env.BUCKET,
         Key: removeKey,

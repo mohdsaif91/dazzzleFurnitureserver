@@ -19,21 +19,19 @@ const addProduct = async (req, res) => {
     const fileName = req.file.originalname.split(".");
     const fileType = fileName[fileName.length - 1];
     if (req.file) {
-      const imageName = `${uuidv4()}.${fileType}`;
-      const Key = `products/${imageName}`;
+      const id = uuidv4();
+      const imageName = `${id}.${fileType}`;
+      const Key = `product/${imageName}`;
       const params = {
         Bucket: process.env.BUCKET,
         Key,
         Body: req.file.buffer,
         ACL: "public-read-write",
       };
-      const allProductId = await productSchema.find({});
-      const productId = allProductId[allProductId.length - 1].productId + 1;
       const { productName, productCategory } = req.body;
-      console.log(productName, productCategory, productId);
-      const newProduct = await productSchema.create(
+      console.log(productName, productCategory);
+      await productSchema.insertMany(
         {
-          productId,
           productImageName: imageName,
           likeCount: 0,
           categoryName: productCategory,
@@ -54,7 +52,8 @@ const addProduct = async (req, res) => {
       );
     }
   } catch (error) {
-    res.status(400).send(error);
+    console.log(error);
+    res.status(500).send(error);
   }
 };
 
@@ -75,7 +74,7 @@ const deleteProduct = (req, res) => {
     s3.deleteObject(
       {
         Bucket: process.env.BUCKET,
-        Key: `products/${imageName}`,
+        Key: `product/${imageName}`,
       },
       async (err, data) => {
         console.log("got it1");
@@ -97,7 +96,7 @@ const deleteProduct = (req, res) => {
   }
 };
 
-const updateProduct = (req, res) => {
+const updateProduct = async (req, res) => {
   try {
     const {
       newEditCategoryName,
@@ -105,13 +104,13 @@ const updateProduct = (req, res) => {
       editImageDisplay,
       editProductName,
     } = req.body;
-    console.log("called", req.body);
     if (req.file) {
+      console.log("with Image !!!");
       const fileName = req.file.originalname.split(".");
       const fileType = fileName[fileName.length - 1];
       const newImageName = `${uuidv4()}.${fileType}`;
-      const removeKey = `products/${editImageDisplay}`;
-      const Key = `products/${newImageName}`;
+      const removeKey = `product/${editImageDisplay}`;
+      const Key = `product/${newImageName}`;
 
       const updatedParams = {
         Bucket: process.env.BUCKET,
@@ -120,50 +119,43 @@ const updateProduct = (req, res) => {
         ACL: "public-read-write",
       };
 
-      try {
-        s3.deleteObject(
-          {
-            Bucket: process.env.BUCKET,
-            Key: removeKey,
-          },
-          (err, data) => {
-            if (err) throw err;
-            console.log(res, "----delete response <>?");
-            s3.upload(updatedParams, async (err, data) => {
-              if (err) throw err;
-              await productSchema.findOneAndUpdate(
-                {
-                  _id: new ObjectId(editProductId),
-                },
-                {
-                  productName: editProductName,
-                  categoryName: newEditCategoryName,
-                  productImageName: newImageName,
-                },
-                { new: true },
-                (err, data) => {
-                  if (err) throw err;
-                  res.status(201).send(data);
-                }
-              );
-            });
-          }
-        );
-      } catch (error) {
-        res.status(500).send(error);
-      }
+      console.log(updatedParams, removeKey);
 
-      console.log(
-        newEditCategoryName,
-        editProductId,
-        editImageDisplay,
-        editProductName,
-        "<>?"
+      s3.deleteObject(
+        {
+          Bucket: process.env.BUCKET,
+          Key: removeKey,
+        },
+        (err, data) => {
+          if (err) {
+            console.log("delete Errr0r=> ", err);
+            throw err;
+          }
+          console.log(res, "----delete response <>?");
+          s3.upload(updatedParams, async (err, data) => {
+            if (err) throw err;
+          });
+        }
       );
-    } else {
     }
+    await productSchema.findOneAndUpdate(
+      {
+        _id: new ObjectId(editProductId),
+      },
+      {
+        productName: editProductName,
+        categoryName: newEditCategoryName,
+        productImageName: editImageDisplay,
+      },
+      { new: true },
+      (err, data) => {
+        if (err) throw err;
+        res.status(201).send(data);
+      }
+    );
   } catch (error) {
     console.log(error);
+    res.status(500).send(error);
   }
 };
 

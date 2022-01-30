@@ -49,7 +49,7 @@ const deleteCategory = async (req, res) => {
     const { id, imageName, categoryName } = req.params;
     const withSpace = categoryName.replace(/_/g, " ");
     s3.deleteObject(
-      { Bucket: process.env.BUCKET, Key: `categories/${imageName}` },
+      { Bucket: process.env.BUCKET, Key: `category/${imageName}` },
       async (err, s3Res) => {
         if (err) throw err;
         console.log("1");
