@@ -183,11 +183,27 @@ const getRandomProduct = async (req, res) => {
   // }
 };
 
+const getProductById = async (req, res) => {
+  try {
+    console.log(req.params);
+    const byIdProduct = await productSchema.findById(req.params.id);
+    console.log(byIdProduct);
+    if (!byIdProduct) {
+      res.status(404).send("No Product found !");
+    }
+    res.status(200).send(byIdProduct);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
+  }
+};
+
 module.exports = {
   addProduct,
-  getProduct,
   deleteProduct,
-  updateProduct,
   getLatestProductId,
+  getProduct,
+  getProductById,
   getRandomProduct,
+  updateProduct,
 };

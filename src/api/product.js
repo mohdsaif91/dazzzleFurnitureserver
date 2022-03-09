@@ -29,6 +29,7 @@ router.get("/:category", productController.getProduct);
 router.delete("/:id/:imageName", productController.deleteProduct);
 router.patch("/", updateProduct, productController.updateProduct);
 router.get("/Id", productController.getLatestProductId);
+router.get("/getProductById/:id", productController.getProductById);
 // router.get("/getRandomProduct", productController.getRandomProduct);
 
 module.exports = router;

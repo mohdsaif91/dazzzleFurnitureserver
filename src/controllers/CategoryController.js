@@ -1,8 +1,9 @@
+const ObjectId = require("mongodb").ObjectID;
+const AWS = require("aws-sdk");
+
 const categorySchema = require("../models/category");
 const productSchema = require("../models/productModal");
-const ObjectId = require("mongodb").ObjectID;
-
-const AWS = require("aws-sdk");
+const HotProductModal = require("../models/hotProductModal");
 
 const ACCESS_KEY = process.env.AWS_ACCESS_KEY_ID;
 const SECRET_KEY = process.env.AWS_SECRET_ACCESS_KEY;
@@ -17,6 +18,7 @@ const getCountCategory = async (req, res) => {
     // categoryName
     const category = await categorySchema.find({});
     const allProduct = await productSchema.find({});
+    const hotProduct = allProduct.filter((f) => f.hotProduct);
     category.sort((a, b) => {
       return a.categoryName.localeCompare(b.categoryName);
     });
@@ -35,9 +37,12 @@ const getCountCategory = async (req, res) => {
       });
       categoryCount.push(cat);
     });
-    res
-      .status(200)
-      .json({ category, categoryCount, productCount: allProduct.length });
+    res.status(200).json({
+      category,
+      categoryCount,
+      productCount: allProduct.length,
+      hotProduct,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });

@@ -5,6 +5,7 @@ const productModalSchema = mongoose.Schema({
   likeCount: { type: Number },
   categoryName: { type: String, required: true },
   productName: { type: String, required: true },
+  hotProduct: { type: Boolean, default: false },
 });
 
 const productSchema = mongoose.model("productSchema", productModalSchema);
