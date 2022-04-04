@@ -159,6 +159,19 @@ const updateProduct = async (req, res) => {
   }
 };
 
+const getAllProduct = async (req, res) => {
+  try {
+    const product = await productSchema.find({});
+    if (!product) {
+      throw "get all product failed";
+    }
+    res.status(200).send(product);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
+  }
+};
+
 const getLatestProductId = async (req, res) => {
   try {
     console.log("kya --------------------");
@@ -201,6 +214,7 @@ const getProductById = async (req, res) => {
 module.exports = {
   addProduct,
   deleteProduct,
+  getAllProduct,
   getLatestProductId,
   getProduct,
   getProductById,

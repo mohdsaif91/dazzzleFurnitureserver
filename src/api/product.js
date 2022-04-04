@@ -25,11 +25,12 @@ router.get("/getRandomProduct", async (req, res) => {
 });
 
 router.post("/add", uploadProduct, productController.addProduct);
-router.get("/:category", productController.getProduct);
+
 router.delete("/:id/:imageName", productController.deleteProduct);
 router.patch("/", updateProduct, productController.updateProduct);
 router.get("/Id", productController.getLatestProductId);
 router.get("/getProductById/:id", productController.getProductById);
-// router.get("/getRandomProduct", productController.getRandomProduct);
+router.get("/allProduct", productController.getAllProduct);
+router.get("/:category", productController.getProduct);
 
 module.exports = router;
