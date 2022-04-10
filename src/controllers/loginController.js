@@ -19,7 +19,7 @@ const authLogin = async (req, res) => {
       message: "Login sucessfull",
     });
   } catch (error) {
-    console.log(error);
+    res.status(500).send(error);
   }
 };
 

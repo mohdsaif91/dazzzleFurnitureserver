@@ -39,7 +39,6 @@ router.post("/add", upload, async (req, res) => {
       Body: req.file.buffer,
       ACL: "public-read-write",
     };
-    console.log(params);
     s3.upload(params, (err, data) => {
       if (err) {
         res.status(400).send(err);
@@ -60,7 +59,7 @@ router.post("/add", upload, async (req, res) => {
       }
     );
   } catch (error) {
-    console.log(error);
+    res.status(500).send(error);
   }
 });
 
@@ -101,16 +100,12 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
           { Bucket: process.env.BUCKET, Key: removeKey },
           (err, res) => {
             if (err) {
-              console.log("1 ", err);
               throw err;
             }
-            console.log(res, "----delete response <>?");
             s3.upload(updateParam, async (err, data) => {
               if (err) {
-                console.log("2 ", err);
                 throw err;
               }
-              console.log(data, " imageUpload");
               await categorySchema.findOneAndUpdate(
                 { _id: new ObjectId(categoryId) },
                 {
@@ -120,12 +115,9 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
                 { returnOriginal: false },
                 (err, data) => {
                   if (err) {
-                    console.log("3 ", err);
                     throw err;
                   }
                   updatedData = data;
-                  console.log(data, " data<>?");
-                  // response.status(201).send(data);
                 }
               );
               const myQuery = { categoryName: oldCategoryName };
@@ -135,10 +127,8 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
                 { $set: { categoryName: editedcategoryName } },
                 (err, data) => {
                   if (err) {
-                    console.log("3 ", err);
                     throw err;
                   }
-                  // console.log(data);
                   response.status(201).send(updatedData);
                 }
               );
@@ -146,7 +136,6 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
           }
         );
       } catch (error) {
-        console.log(error, " 4");
         response.status(500).send(error);
       }
     } else {
@@ -158,7 +147,6 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
         (err, data) => {
           if (err) throw err;
           updatedData = data;
-          console.log(data, "<>?");
         }
       );
 
@@ -167,7 +155,6 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
         { $set: { categoryName: editedcategoryName } },
         (err, data) => {
           if (err) {
-            console.log("3 ", err);
             throw err;
           }
           response.status(201).send(updatedData);
@@ -175,7 +162,6 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
       );
     }
   } catch (error) {
-    console.log(error);
     response.status(500).send(error);
   }
 });

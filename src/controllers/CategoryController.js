@@ -44,7 +44,6 @@ const getCountCategory = async (req, res) => {
       hotProduct,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 };
@@ -57,29 +56,24 @@ const deleteCategory = async (req, res) => {
       { Bucket: process.env.BUCKET, Key: `category/${imageName}` },
       async (err, s3Res) => {
         if (err) throw err;
-        console.log("1");
         await categorySchema.deleteOne(
           { _id: new ObjectId(id) },
           async (err, result) => {
             if (err) {
-              console.log(err);
               throw err;
             }
-            console.log("2");
           }
         );
         await productSchema.deleteMany(
           { categoryName: withSpace },
           (err, data) => {
             if (err) throw err;
-            console.log("3");
             res.status(200).json({ id, imageName });
           }
         );
       }
     );
   } catch (error) {
-    console.log(error);
     res.status(204).json({ error });
   }
 };

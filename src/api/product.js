@@ -20,7 +20,7 @@ router.get("/getRandomProduct", async (req, res) => {
     ]);
     res.status(200).send(randomProduct);
   } catch (error) {
-    console.log(error);
+    res.status(500).send(error);
   }
 });
 

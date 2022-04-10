@@ -29,7 +29,6 @@ const addProduct = async (req, res) => {
         ACL: "public-read-write",
       };
       const { productName, productCategory } = req.body;
-      console.log(productName, productCategory);
       await productSchema.insertMany(
         {
           productImageName: imageName,
@@ -52,14 +51,12 @@ const addProduct = async (req, res) => {
       );
     }
   } catch (error) {
-    console.log(error);
     res.status(500).send(error);
   }
 };
 
 const getProduct = async (req, res) => {
   try {
-    console.log("get Product----------------------------");
     const { category } = req.params;
     const product = await productSchema.find({ categoryName: category });
     res.status(200).json(product);
@@ -77,14 +74,12 @@ const deleteProduct = (req, res) => {
         Key: `product/${imageName}`,
       },
       async (err, data) => {
-        console.log("got it1");
         if (err) {
           throw err;
         }
         await productSchema.deleteOne(
           { _id: new ObjectId(id) },
           (err, data) => {
-            console.log("got it2");
             if (err) throw err;
             res.status(200).json(id);
           }
@@ -92,11 +87,12 @@ const deleteProduct = (req, res) => {
       }
     );
   } catch (error) {
-    console.log(error);
+    res.status(500).send(error);
   }
 };
 
 const updateProduct = async (req, res) => {
+  let newImageName = "";
   try {
     const {
       newEditCategoryName,
@@ -105,10 +101,9 @@ const updateProduct = async (req, res) => {
       editProductName,
     } = req.body;
     if (req.file) {
-      console.log("with Image !!!");
       const fileName = req.file.originalname.split(".");
       const fileType = fileName[fileName.length - 1];
-      const newImageName = `${uuidv4()}.${fileType}`;
+      newImageName = `${uuidv4()}.${fileType}`;
       const removeKey = `product/${editImageDisplay}`;
       const Key = `product/${newImageName}`;
 
@@ -119,8 +114,6 @@ const updateProduct = async (req, res) => {
         ACL: "public-read-write",
       };
 
-      console.log(updatedParams, removeKey);
-
       s3.deleteObject(
         {
           Bucket: process.env.BUCKET,
@@ -128,10 +121,8 @@ const updateProduct = async (req, res) => {
         },
         (err, data) => {
           if (err) {
-            console.log("delete Errr0r=> ", err);
             throw err;
           }
-          console.log(res, "----delete response <>?");
           s3.upload(updatedParams, async (err, data) => {
             if (err) throw err;
           });
@@ -145,7 +136,7 @@ const updateProduct = async (req, res) => {
       {
         productName: editProductName,
         categoryName: newEditCategoryName,
-        productImageName: editImageDisplay,
+        productImageName: newImageName,
       },
       { new: true },
       (err, data) => {
@@ -154,7 +145,6 @@ const updateProduct = async (req, res) => {
       }
     );
   } catch (error) {
-    console.log(error);
     res.status(500).send(error);
   }
 };
@@ -167,14 +157,12 @@ const getAllProduct = async (req, res) => {
     }
     res.status(200).send(product);
   } catch (error) {
-    console.log(error);
     res.status(500).send(error);
   }
 };
 
 const getLatestProductId = async (req, res) => {
   try {
-    console.log("kya --------------------");
     const allProduct = await productSchema.find({});
     res.status(200).send(allProduct[allProduct.length - 1]);
   } catch (error) {
@@ -183,30 +171,17 @@ const getLatestProductId = async (req, res) => {
 };
 
 const getRandomProduct = async (req, res) => {
-  console.log("called");
   return res.status(200).send("hi");
-  // try {
-  //   const randomProduct = await productSchema.find();
-  //   //   { $sample: { size: 1 } },
-  //   // ]);
-
-  //   // console.log(randomProduct);
-  // } catch (error) {
-  //   console.log(error);
-  // }
 };
 
 const getProductById = async (req, res) => {
   try {
-    console.log(req.params);
     const byIdProduct = await productSchema.findById(req.params.id);
-    console.log(byIdProduct);
     if (!byIdProduct) {
       res.status(404).send("No Product found !");
     }
     res.status(200).send(byIdProduct);
   } catch (error) {
-    console.log(error);
     res.status(500).send(error);
   }
 };

@@ -22,7 +22,6 @@ const addHotproduct = async (req, res) => {
     }
     res.status(201).send(updatedObj);
   } catch (error) {
-    console.log(error);
     res.status(500).send(error);
   }
 };
