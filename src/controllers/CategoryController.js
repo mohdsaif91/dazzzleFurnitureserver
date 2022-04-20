@@ -37,18 +37,15 @@ const getCountCategory = async (req, res) => {
       return a.categoryName.localeCompare(b.categoryName);
     });
     let categoryCount = [];
-
     category.map((m) => {
       const cat = {
         name: "",
         count: 0,
       };
       cat.name = m.categoryName;
-      allProduct.filter((f) => {
-        if (f.categoryName === m.categoryName) {
-          cat.count += 1;
-        }
-      });
+      cat.count = allProduct.filter(
+        (f) => f.categoryName === m.categoryName
+      ).length;
       categoryCount.push(cat);
     });
     res.status(200).json({

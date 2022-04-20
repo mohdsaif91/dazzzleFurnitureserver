@@ -1,18 +1,22 @@
-const productSchema = require("../models/productModal");
-const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const ObjectId = require("mongodb").ObjectID;
-const fs = require("fs");
+const { google } = require("googleapis");
+const { Stream } = require("stream");
 
-const ACCESS_KEY = process.env.AWS_ACCESS_KEY_ID;
-const SECRET_KEY = process.env.AWS_SECRET_ACCESS_KEY;
+const productSchema = require("../models/productModal");
+const { file } = require("googleapis/build/src/apis/file");
 
-const s3 = new AWS.S3({
-  accessKeyId: ACCESS_KEY,
-  secretAccessKey: SECRET_KEY,
+const authToClient = new google.auth.OAuth2(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRATE,
+  process.env.REDIRECT_URL
+);
+authToClient.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
+
+const drive = google.drive({
+  version: "v3",
+  auth: authToClient,
 });
-
-const allowedType = ["png", "jpg", "jpeg"];
 
 const addProduct = async (req, res) => {
   try {
@@ -22,35 +26,49 @@ const addProduct = async (req, res) => {
       const id = uuidv4();
       const imageName = `${id}.${fileType}`;
       const Key = `product/${imageName}`;
-      const params = {
-        Bucket: process.env.BUCKET,
-        Key,
-        Body: req.file.buffer,
-        ACL: "public-read-write",
-      };
-      const { productName, productCategory } = req.body;
-      await productSchema.insertMany(
-        {
-          productImageName: imageName,
-          likeCount: 0,
-          categoryName: productCategory,
-          productName,
-        },
-        (err, data) => {
-          if (err) {
-            throw err;
-          }
 
-          s3.upload(params, (err, data) => {
+      const { productName, productCategory } = req.body;
+
+      const bufferedStream = new Stream.PassThrough();
+      bufferedStream.end(req.file.buffer);
+
+      const imageRes = await drive.files.create({
+        requestBody: {
+          name: imageName,
+          mimeType: `image/${fileType}`,
+        },
+        media: {
+          mimeType: `image/${fileType}`,
+          body: bufferedStream,
+        },
+      });
+      if (imageRes.data.id) {
+        await drive.permissions.create({
+          fileId: imageRes.data.id,
+          requestBody: {
+            role: "reader",
+            type: "anyone",
+          },
+        });
+
+        await productSchema.insertMany(
+          {
+            productImageName: imageRes.data.id,
+            likeCount: 0,
+            categoryName: productCategory,
+            productName,
+          },
+          (err, data) => {
             if (err) {
-              res.status(400).send(err);
+              throw err;
             }
-          });
-          res.status(201).send(data);
-        }
-      );
+            res.status(201).send(data);
+          }
+        );
+      }
     }
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 };
@@ -65,34 +83,31 @@ const getProduct = async (req, res) => {
   }
 };
 
-const deleteProduct = (req, res) => {
+const deleteProduct = async (req, res) => {
   try {
     const { id, imageName } = req.params;
-    s3.deleteObject(
-      {
-        Bucket: process.env.BUCKET,
-        Key: `product/${imageName}`,
-      },
-      async (err, data) => {
-        if (err) {
-          throw err;
-        }
-        await productSchema.deleteOne(
-          { _id: new ObjectId(id) },
-          (err, data) => {
-            if (err) throw err;
-            res.status(200).json(id);
-          }
-        );
-      }
-    );
+
+    const deleteRes = await drive.files.delete({
+      fileId: imageName,
+    });
+
+    if (!deleteRes) {
+      throw "Delete image operation failed";
+    }
+
+    await productSchema.deleteOne({ _id: new ObjectId(id) }, (err, data) => {
+      if (err) throw err;
+      res.status(200).json(id);
+    });
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 };
 
 const updateProduct = async (req, res) => {
   let newImageName = "";
+  let insertRes = "";
   try {
     const {
       newEditCategoryName,
@@ -107,27 +122,35 @@ const updateProduct = async (req, res) => {
       const removeKey = `product/${editImageDisplay}`;
       const Key = `product/${newImageName}`;
 
-      const updatedParams = {
-        Bucket: process.env.BUCKET,
-        Key,
-        Body: req.file.buffer,
-        ACL: "public-read-write",
-      };
+      const bufferedStream = new Stream.PassThrough();
+      bufferedStream.end(req.file.buffer);
 
-      s3.deleteObject(
-        {
-          Bucket: process.env.BUCKET,
-          Key: removeKey,
+      const deleteRes = await drive.files.delete({
+        fileId: editImageDisplay,
+      });
+      if (!deleteRes) {
+        throw "deleting image operation failed";
+      }
+      insertRes = await drive.files.create({
+        requestBody: {
+          name: newImageName,
+          mimeType: `image/${fileType}`,
         },
-        (err, data) => {
-          if (err) {
-            throw err;
-          }
-          s3.upload(updatedParams, async (err, data) => {
-            if (err) throw err;
-          });
-        }
-      );
+        media: {
+          mimeType: `image/${fileType}`,
+          body: bufferedStream,
+        },
+      });
+      console.log(insertRes);
+      if (insertRes.data.id) {
+        await drive.permissions.create({
+          fileId: insertRes.data.id,
+          requestBody: {
+            role: "reader",
+            type: "anyone",
+          },
+        });
+      }
     }
     await productSchema.findOneAndUpdate(
       {
@@ -136,7 +159,7 @@ const updateProduct = async (req, res) => {
       {
         productName: editProductName,
         categoryName: newEditCategoryName,
-        productImageName: newImageName,
+        productImageName: insertRes.data.id,
       },
       { new: true },
       (err, data) => {
@@ -145,6 +168,7 @@ const updateProduct = async (req, res) => {
       }
     );
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 };
