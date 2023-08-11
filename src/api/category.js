@@ -35,54 +35,55 @@ const storage = multer.memoryStorage({
 
 const upload = multer({ storage }).single("categoryImage");
 const editUpload = multer({ storage }).single("editedImage");
+// , async (req, res) => {
+//   let imageData = "";
+//   try {
+//     let fileName = req.file.originalname.split(".");
+//     const myFileType = fileName[fileName.length - 1];
+//     const imageName = `${uuidv4()}.${myFileType}`;
+//     const Key = `category/${imageName}`;
 
-router.post("/add", upload, async (req, res) => {
-  let imageData = "";
-  try {
-    let fileName = req.file.originalname.split(".");
-    const myFileType = fileName[fileName.length - 1];
-    const imageName = `${uuidv4()}.${myFileType}`;
-    const Key = `category/${imageName}`;
+//     const bufferedStream = new Stream.PassThrough();
+//     bufferedStream.end(req.file.buffer);
 
-    const bufferedStream = new Stream.PassThrough();
-    bufferedStream.end(req.file.buffer);
+//     const imageRes = await drive.files.create({
+//       requestBody: {
+//         name: imageName,
+//         mimeType: `image/${myFileType}`,
+//       },
+//       media: {
+//         mimeType: `image/${myFileType}`,
+//         body: bufferedStream,
+//       },
+//     });
+//     if (imageRes.data.id) {
+//       await drive.permissions.create({
+//         fileId: imageRes.data.id,
+//         requestBody: {
+//           role: "reader",
+//           type: "anyone",
+//         },
+//       });
+//       const { categoryName } = req.body;
+//       const newCategory = await categorySchema.insertMany(
+//         {
+//           categoryName,
+//           imageId: imageRes.data.id,
+//         },
+//         (err, data) => {
+//           if (err) {
+//             throw err;
+//           }
+//           res.status(201).send(data);
+//         }
+//       );
+//     }
+//   } catch (error) {
+//     res.status(500).send(error);
+//   }
 
-    const imageRes = await drive.files.create({
-      requestBody: {
-        name: imageName,
-        mimeType: `image/${myFileType}`,
-      },
-      media: {
-        mimeType: `image/${myFileType}`,
-        body: bufferedStream,
-      },
-    });
-    if (imageRes.data.id) {
-      await drive.permissions.create({
-        fileId: imageRes.data.id,
-        requestBody: {
-          role: "reader",
-          type: "anyone",
-        },
-      });
-      const { categoryName } = req.body;
-      const newCategory = await categorySchema.insertMany(
-        {
-          categoryName,
-          imageId: imageRes.data.id,
-        },
-        (err, data) => {
-          if (err) {
-            throw err;
-          }
-          res.status(201).send(data);
-        }
-      );
-    }
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+router.post("/create", upload, categoryController.createCategory);
+router.get("/", categoryController.getCategory);
 
 //update Categorey
 router.patch("/updateCategory", editUpload, async (req, response) => {

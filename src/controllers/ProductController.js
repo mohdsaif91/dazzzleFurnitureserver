@@ -4,7 +4,6 @@ const { google } = require("googleapis");
 const { Stream } = require("stream");
 
 const productSchema = require("../models/productModal");
-const { file } = require("googleapis/build/src/apis/file");
 
 const authToClient = new google.auth.OAuth2(
   process.env.CLIENT_ID,

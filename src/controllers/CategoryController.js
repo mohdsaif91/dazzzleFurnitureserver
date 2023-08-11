@@ -1,10 +1,18 @@
 const ObjectId = require("mongodb").ObjectID;
-const AWS = require("aws-sdk");
+const { S3Client, S3 } = require("@aws-sdk/client-s3");
+const { Upload } = require("@aws-sdk/lib-storage");
+const { v4: uuidv4 } = require("uuid");
+
 const { google } = require("googleapis");
 
 const categorySchema = require("../models/category");
 const productSchema = require("../models/productModal");
 const HotProductModal = require("../models/hotProductModal");
+
+const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+const region = process.env.REGION;
+const Bucket = process.env.BUCKET;
 
 const authToClient = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -18,6 +26,58 @@ const drive = google.drive({
   version: "v3",
   auth: authToClient,
 });
+//
+
+const createCategory = (req, res) => {
+  try {
+    console.log(req.body.categoryName);
+    console.log(req.file);
+    let fileName = req.file.originalname.split(".");
+    const myFileType = fileName[fileName.length - 1];
+    const imageName = `${uuidv4()}.${myFileType}`;
+    const Key = `category/${imageName}`;
+    new Upload({
+      client: new S3Client({
+        credentials: {
+          accessKeyId,
+          secretAccessKey,
+        },
+        region,
+      }),
+      params: {
+        ACL: "public-read",
+        Bucket,
+        Key,
+        Body: req.file.buffer,
+      },
+    })
+      .done()
+      .then((data) => {
+        categorySchema.insertMany(
+          {
+            categoryName: req.body.categoryName,
+            imageId: imageName,
+          },
+          (err) => {
+            if (err) {
+              throw err;
+            }
+            res.status(201).send({
+              categoryName: req.body.categoryName,
+              imageId: imageName,
+            });
+          }
+        );
+      })
+      .catch((err) => {
+        throw err;
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+//
 
 // const ACCESS_KEY = process.env.AWS_ACCESS_KEY_ID;
 // const SECRET_KEY = process.env.AWS_SECRET_ACCESS_KEY;
@@ -26,6 +86,18 @@ const drive = google.drive({
 //   accessKeyId: ACCESS_KEY,
 //   secretAccessKey: SECRET_KEY,
 // });
+
+const getCategory = async (req, res) => {
+  try {
+    const allCategory = await categorySchema.find({});
+    if (!allCategory) {
+      throw "Category retrival failed";
+    }
+    res.status(200).send(allCategory);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
 
 const getCountCategory = async (req, res) => {
   try {
@@ -86,4 +158,9 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-module.exports = { getCountCategory, deleteCategory };
+module.exports = {
+  getCountCategory,
+  getCategory,
+  deleteCategory,
+  createCategory,
+};

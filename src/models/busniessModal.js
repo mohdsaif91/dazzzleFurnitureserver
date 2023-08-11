@@ -9,6 +9,6 @@ const busniessModalSchema = mongoose.Schema({
   whatsAppUrl: String,
 });
 
-const busniessModal = mongoose.model("busniessOinfo", busniessModalSchema);
+const busniessModal = mongoose.model("busniessinfo", busniessModalSchema);
 
 module.exports = busniessModal;
