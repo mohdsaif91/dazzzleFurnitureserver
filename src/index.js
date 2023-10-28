@@ -13,6 +13,7 @@ app.listen(port, () => {
       useCreateIndex: true,
     })
     .then(() => {
+      console.clear();
       console.log("connected", port);
       console.log("hihi---------------");
     })

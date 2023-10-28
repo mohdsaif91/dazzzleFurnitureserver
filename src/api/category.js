@@ -84,6 +84,7 @@ const editUpload = multer({ storage }).single("editedImage");
 
 router.post("/create", upload, categoryController.createCategory);
 router.get("/", categoryController.getCategory);
+router.patch("/update", upload, categoryController.updateCategory);
 
 //update Categorey
 router.patch("/updateCategory", editUpload, async (req, response) => {
@@ -188,5 +189,6 @@ router.delete(
   "/delete/:id/:imageName/:categoryName/:imageId",
   categoryController.deleteCategory
 );
+router.delete("/", categoryController.deleteCategory);
 
 module.exports = router;
