@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const productModalSchema = mongoose.Schema({
   productImageName: { type: String, required: true },
-  likeCount: { type: Number },
+  likeCount: { type: Number, default: 0 },
   categoryName: { type: String, required: true },
   productName: { type: String, required: true },
   hotProduct: { type: Boolean, default: false },

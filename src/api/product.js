@@ -11,7 +11,7 @@ const storage = multer.memoryStorage({
 });
 
 const uploadProduct = multer({ storage }).single("productImage");
-const updateProduct = multer({ storage }).single("newEditImage");
+// const updateProduct = multer({ storage }).single("newEditImage");
 
 router.get("/getRandomProduct", async (req, res) => {
   try {
@@ -24,13 +24,13 @@ router.get("/getRandomProduct", async (req, res) => {
   }
 });
 
-router.post("/add", uploadProduct, productController.addProduct);
+router.post("/addProduct", uploadProduct, productController.addProduct);
 
 router.delete("/:id/:imageName", productController.deleteProduct);
-router.patch("/", updateProduct, productController.updateProduct);
+router.put("/update", uploadProduct, productController.updateProduct);
 router.get("/Id", productController.getLatestProductId);
 router.get("/getProductById/:id", productController.getProductById);
-router.get("/allProduct", productController.getAllProduct);
+router.get("/", productController.getAllProduct);
 router.get("/:category", productController.getProduct);
 
 module.exports = router;

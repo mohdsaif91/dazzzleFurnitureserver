@@ -257,10 +257,22 @@ const updateCategory = async (req, res) => {
   }
 };
 
+const getCategoryName = async (req, res, next) => {
+  try {
+    const categoryName = await categorySchema.distinct("categoryName");
+    if (categoryName) {
+      return res.status(200).json(categoryName);
+    }
+  } catch (error) {
+    return res.status(500).json({ error });
+  }
+};
+
 module.exports = {
   getCountCategory,
   getCategory,
   deleteCategory,
   createCategory,
   updateCategory,
+  getCategoryName,
 };

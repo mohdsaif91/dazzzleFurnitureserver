@@ -183,6 +183,7 @@ router.patch("/updateCategory", editUpload, async (req, response) => {
     response.status(500).send(error);
   }
 });
+router.get("/categoryName", categoryController.getCategoryName);
 
 router.get("/", categoryController.getCountCategory);
 router.delete(
